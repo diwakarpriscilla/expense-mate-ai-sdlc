@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Expense Tracker</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 2rem 1rem;
+      background: #f4f6f8;
+      color: #1f2933;
+      font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    h1 { margin: 0 0 1.25rem; font-size: 1.5rem; }
+    h2 { margin: 1.5rem 0 0.75rem; font-size: 1.1rem; }
+    form { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    input {
+      padding: 0.6rem;
+      border: 1px solid #cbd2d9;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    input[name="title"] { flex: 2 1 160px; }
+    input[name="amount"] { flex: 1 1 90px; }
+    button {
+      padding: 0.6rem 1rem;
+      border: none;
+      border-radius: 6px;
+      background: #2563eb;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:hover { background: #1d4ed8; }
+    .error { margin-top: 0.75rem; color: #b91c1c; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.6rem 0.25rem; text-align: left; border-bottom: 1px solid #e4e7eb; }
+    th.amount, td.amount { text-align: right; }
+    tfoot td { font-weight: 600; border-bottom: none; }
+    .empty { color: #7b8794; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Expense Tracker</h1>
+
+    <form method="post">
+      <input type="text" name="title" placeholder="Title" required>
+      <input type="number" name="amount" placeholder="Amount" step="0.01" min="0.01" required>
+      <button type="submit">Add</button>
+    </form>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+    <h2>Expenses</h2>
+    {% if expenses %}
+    <table>
+      <thead>
+        <tr><th>Title</th><th class="amount">Amount</th></tr>
+      </thead>
+      <tbody>
+        {% for e in expenses %}
+        <tr><td>{{ e.title }}</td><td class="amount">{{ "%.2f"|format(e.amount) }}</td></tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr><td>Total</td><td class="amount">{{ "%.2f"|format(total) }}</td></tr>
+      </tfoot>
+    </table>
+    {% else %}
+    <p class="empty">No expenses yet. Add your first one above.</p>
+    {% endif %}
+  </div>
+</body>
+</html>
