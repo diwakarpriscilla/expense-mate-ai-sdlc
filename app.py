@@ -48,6 +48,10 @@ def index():
                 budget = value
                 return redirect(url_for("index"))
 
+        elif action == "clear_expenses":
+            expenses.clear()
+            return redirect(url_for("index"))
+
     selected_category = request.args.get("category", "All")
     if selected_category not in CATEGORIES:
         selected_category = "All"
@@ -66,6 +70,7 @@ def index():
     return render_template(
         "index.html",
         expenses=visible,
+        has_expenses=bool(expenses),
         filtered_total=filtered_total,
         overall_total=overall_total,
         budget=budget,

@@ -45,6 +45,9 @@
       cursor: pointer;
     }
     button:hover { background: #1d4ed8; }
+    button.danger { background: #dc2626; }
+    button.danger:hover { background: #b91c1c; }
+    .clear-form { margin-bottom: 0.75rem; }
     .error { margin: 0.5rem 0 0; color: #b91c1c; }
     .note { margin: 0.5rem 0 0; color: #52606d; font-size: 0.9rem; }
     .banner {
@@ -115,6 +118,13 @@
       </select>
       <noscript><button type="submit">Filter</button></noscript>
     </form>
+
+    {% if has_expenses %}
+    <form method="post" class="clear-form">
+      <input type="hidden" name="action" value="clear_expenses">
+      <button type="submit" class="danger">Clear All Expenses</button>
+    </form>
+    {% endif %}
 
     {% if expenses %}
     <table>

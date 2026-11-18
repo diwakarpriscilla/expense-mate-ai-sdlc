@@ -172,3 +172,33 @@ def test_budget_warning_banner(page):
 
     set_budget(page, "200")
     expect(page.locator(".banner")).to_have_count(0)
+
+
+def test_clear_all_expenses(page):
+    clear_btn = page.get_by_role("button", name="Clear All Expenses")
+    expect(clear_btn).to_have_count(0)
+
+    set_budget(page, "100")
+    add_expense(page, "Lunch", "10.00", "Food")
+    add_expense(page, "Taxi", "40", "Travel")
+
+    # Button sits between the filter and the table.
+    expect(clear_btn).to_be_visible()
+    filter_box = page.locator("#category-filter").bounding_box()
+    btn_box = clear_btn.bounding_box()
+    table_box = page.locator("table").bounding_box()
+    assert filter_box["y"] < btn_box["y"] < table_box["y"]
+
+    # Clearing works from a filtered view and leaves no expenses under any filter.
+    filter_by(page, "Food")
+    clear_btn.click()
+    expect(page).to_have_url(f"{BASE_URL}/")
+    expect(page.get_by_text("No expenses yet")).to_be_visible()
+    expect(page.locator("table")).to_have_count(0)
+    expect(clear_btn).to_have_count(0)
+    for category in ("Travel", "Food", "All"):
+        filter_by(page, category)
+        expect(page.locator("tbody tr")).to_have_count(0)
+
+    # Budget is untouched.
+    expect(page.get_by_text("Current budget: 100.00")).to_be_visible()
