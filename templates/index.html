@@ -119,7 +119,7 @@
       <noscript><button type="submit">Filter</button></noscript>
     </form>
 
-    {% if overall_total %}
+    {% if has_expenses %}
     <form method="post" class="clear-form" onsubmit="return confirm('Clear all expenses? This cannot be undone.');">
       <input type="hidden" name="action" value="clear_expenses">
       <button type="submit" class="danger">Clear All Expenses</button>

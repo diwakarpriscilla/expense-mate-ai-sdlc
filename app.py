@@ -1,3 +1,8 @@
+"""Expense Tracker (Flask, in-memory storage).
+
+Traceability: EPMCDMETST-72828 (Clear All Expenses button) and
+EPMCDMETST-72835 (Clear All Expenses UX standardization).
+"""
 from flask import Flask, redirect, render_template, request, url_for
 
 app = Flask(__name__)
@@ -38,7 +43,7 @@ def index():
 
         elif action == "clear_expenses":
             expenses.clear()
-            return redirect(url_for("index"))
+            return redirect(url_for("index", category="All"))
 
         elif action == "set_budget":
             try:
@@ -70,6 +75,7 @@ def index():
     return render_template(
         "index.html",
         expenses=visible,
+        has_expenses=bool(expenses),
         filtered_total=filtered_total,
         overall_total=overall_total,
         budget=budget,

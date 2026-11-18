@@ -1,5 +1,7 @@
 """End-to-end tests for the Expense Tracker.
 
+Covers EPMCDMETST-72828 / EPMCDMETST-72835 (Clear All Expenses).
+
 The fixtures start a fresh Flask server on http://localhost:5000 for every test,
 so each test begins with empty in-memory state. Stop any server already running
 on that port before running the tests.
@@ -97,6 +99,19 @@ def filter_by(page, category):
     expect(page).to_have_url(re.compile(rf"category={category}$"))
 
 
+def clear_button(page):
+    return page.get_by_role("button", name="Clear All Expenses")
+
+
+def click_clear(page, accept=True):
+    def handle(dialog):
+        assert "Clear all expenses" in dialog.message
+        dialog.accept() if accept else dialog.dismiss()
+
+    page.once("dialog", handle)
+    clear_button(page).click()
+
+
 def banner_value(page, label):
     row = page.locator(".banner div").filter(has=page.get_by_text(label, exact=True))
     return row.locator("span").nth(1)
@@ -172,3 +187,72 @@ def test_budget_warning_banner(page):
 
     set_budget(page, "200")
     expect(page.locator(".banner")).to_have_count(0)
+
+
+def test_clear_button_visibility_and_placement(page):
+    # FR-1: hidden in the empty state.
+    expect(clear_button(page)).to_have_count(0)
+
+    add_expense(page, "Lunch", "10.00", "Food")
+    expect(clear_button(page)).to_be_visible()
+
+    # The button sits above the expense table.
+    button_box = clear_button(page).bounding_box()
+    table_box = page.locator("table").bounding_box()
+    assert button_box["y"] + button_box["height"] <= table_box["y"]
+
+    # Still available when the active filter hides every row.
+    filter_by(page, "Bills")
+    expect(page.locator("table")).to_have_count(0)
+    expect(clear_button(page)).to_be_visible()
+
+
+def test_clear_cancel_keeps_expenses(page):
+    add_expense(page, "Lunch", "10.00", "Food")
+    add_expense(page, "Taxi", "40", "Travel")
+
+    click_clear(page, accept=False)
+
+    expect(page.locator("tbody tr")).to_have_count(2)
+    expect(page.locator("tfoot td.amount")).to_have_text("50.00")
+
+
+def test_clear_all_expenses_shows_empty_state_and_zero_totals(page):
+    set_budget(page, "20")
+    add_expense(page, "Lunch", "10.00", "Food")
+    add_expense(page, "Taxi", "40", "Travel")
+    expect(page.locator(".banner")).to_be_visible()
+
+    click_clear(page)
+
+    expect(page.get_by_text("No expenses yet")).to_be_visible()
+    expect(page.locator("table")).to_have_count(0)
+    expect(page.locator("tbody tr")).to_have_count(0)
+    expect(clear_button(page)).to_have_count(0)
+    # Overall total is 0, so the over-budget banner is gone.
+    expect(page.locator(".banner")).to_have_count(0)
+    expect(page.get_by_text("Current budget: 20.00")).to_be_visible()
+
+
+def test_clear_resets_filter_to_all(page):
+    add_expense(page, "Lunch", "10.00", "Food")
+    add_expense(page, "Taxi", "40", "Travel")
+    filter_by(page, "Food")
+    expect(page.locator("#category-filter")).to_have_value("Food")
+
+    click_clear(page)
+
+    expect(page.get_by_text("No expenses yet")).to_be_visible()
+    expect(page.locator("#category-filter")).to_have_value("All")
+
+
+def test_add_expense_after_clear_without_restart(page):
+    add_expense(page, "Lunch", "10.00", "Food")
+    click_clear(page)
+    expect(page.get_by_text("No expenses yet")).to_be_visible()
+
+    add_expense(page, "Coffee", "4.50", "Food")
+
+    expect(page.locator("tbody tr")).to_have_count(1)
+    expect(page.locator("tfoot td").first).to_have_text("Total (All)")
+    expect(page.locator("tfoot td.amount")).to_have_text("4.50")
