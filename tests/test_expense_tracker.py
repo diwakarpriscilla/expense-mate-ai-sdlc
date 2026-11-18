@@ -172,3 +172,45 @@ def test_budget_warning_banner(page):
 
     set_budget(page, "200")
     expect(page.locator(".banner")).to_have_count(0)
+
+
+def test_clear_all_expenses(page):
+    clear_button = page.get_by_role("button", name="Clear All Expenses")
+    expect(clear_button).to_have_count(0)
+
+    set_budget(page, "100")
+    add_expense(page, "Lunch", "10.00", "Food")
+    add_expense(page, "Taxi", "40", "Travel")
+    expect(clear_button).to_be_visible()
+
+    # The button sits above the table, in the Expenses section header.
+    button_box = clear_button.bounding_box()
+    table_box = page.locator("table").bounding_box()
+    assert button_box["y"] + button_box["height"] <= table_box["y"]
+
+    clear_button.click()
+    expect(page).to_have_url(re.compile(r"/$"))
+    expect(page.locator("table")).to_have_count(0)
+    expect(page.get_by_text("No expenses yet")).to_be_visible()
+    expect(clear_button).to_have_count(0)
+    expect(page.get_by_text("Current budget: 100.00")).to_be_visible()
+
+    # Reload (PRG): nothing is re-submitted and the list stays empty.
+    page.reload()
+    expect(page.get_by_text("No expenses yet")).to_be_visible()
+
+
+def test_clear_all_expenses_with_filter(page):
+    add_expense(page, "Lunch", "10.00", "Food")
+    add_expense(page, "Taxi", "40", "Travel")
+
+    filter_by(page, "Food")
+    page.get_by_role("button", name="Clear All Expenses").click()
+
+    expect(page.locator("tbody tr")).to_have_count(0)
+    expect(page.get_by_text("No expenses found in Food")).to_be_visible()
+
+    filter_by(page, "Travel")
+    expect(page.get_by_text("Taxi")).to_have_count(0)
+    filter_by(page, "All")
+    expect(page.get_by_text("No expenses yet")).to_be_visible()

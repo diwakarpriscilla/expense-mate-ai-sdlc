@@ -36,6 +36,13 @@ def index():
                 expenses.append({"title": title, "amount": amount, "category": category})
                 return redirect(url_for("index"))
 
+        elif action == "clear_expenses":
+            expenses.clear()
+            category = request.args.get("category")
+            if category in CATEGORIES:
+                return redirect(url_for("index", category=category))
+            return redirect(url_for("index"))
+
         elif action == "set_budget":
             try:
                 value = float(request.form.get("budget", ""))
@@ -66,6 +73,7 @@ def index():
     return render_template(
         "index.html",
         expenses=visible,
+        has_expenses=len(expenses) > 0,
         filtered_total=filtered_total,
         overall_total=overall_total,
         budget=budget,

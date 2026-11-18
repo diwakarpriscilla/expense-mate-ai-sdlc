@@ -45,6 +45,10 @@
       cursor: pointer;
     }
     button:hover { background: #1d4ed8; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+    .section-header h2 { margin: 1.5rem 0 0.75rem; }
+    button.danger { background: #dc2626; padding: 0.4rem 0.75rem; font-size: 0.9rem; }
+    button.danger:hover { background: #b91c1c; }
     .error { margin: 0.5rem 0 0; color: #b91c1c; }
     .note { margin: 0.5rem 0 0; color: #52606d; font-size: 0.9rem; }
     .banner {
@@ -104,7 +108,15 @@
     </form>
     {% if expense_error %}<p class="error">{{ expense_error }}</p>{% endif %}
 
-    <h2>Expenses</h2>
+    <div class="section-header">
+      <h2>Expenses</h2>
+      {% if has_expenses %}
+      <form method="post" action="{{ url_for('index', category=selected_category) if selected_category != 'All' else url_for('index') }}">
+        <input type="hidden" name="action" value="clear_expenses">
+        <button type="submit" class="danger" id="clear-expenses">Clear All Expenses</button>
+      </form>
+      {% endif %}
+    </div>
     <form method="get" class="filter">
       <label for="category-filter">Filter:</label>
       <select id="category-filter" name="category" onchange="this.form.submit()">
