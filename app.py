@@ -36,6 +36,10 @@ def index():
                 expenses.append({"title": title, "amount": amount, "category": category})
                 return redirect(url_for("index"))
 
+        elif action == "clear_expenses":
+            expenses.clear()
+            return redirect(url_for("index"))
+
         elif action == "set_budget":
             try:
                 value = float(request.form.get("budget", ""))
