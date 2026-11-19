@@ -148,6 +148,35 @@ def test_filter_by_category_and_empty_state(page):
     expect(page.locator("tfoot td.amount")).to_have_text("55.50")
 
 
+def test_clear_all_expenses_keeps_budget(page):
+    clear_button = page.get_by_role("button", name="Clear All Expenses")
+    expect(clear_button).to_be_visible()
+
+    set_budget(page, "100")
+    add_expense(page, "Groceries", "60", "Food")
+    add_expense(page, "Train", "90", "Travel")
+    expect(page.locator(".banner")).to_be_visible()
+
+    # The button sits above the table.
+    assert clear_button.bounding_box()["y"] < page.locator("table").bounding_box()["y"]
+
+    clear_button.click()
+    expect(page).to_have_url(re.compile(rf"{re.escape(BASE_URL)}/?$"))
+    expect(page.get_by_text("No expenses yet. Add your first one above.")).to_be_visible()
+    expect(page.locator("tbody tr")).to_have_count(0)
+    expect(page.locator(".banner")).to_have_count(0)
+    expect(page.get_by_text("Current budget: 100.00")).to_be_visible()
+
+    # Reloading after the redirect does not re-submit the clear.
+    add_expense(page, "Lunch", "10", "Food")
+    page.reload()
+    expect(page.locator("tbody tr")).to_have_count(1)
+
+    # Clearing via GET is not supported.
+    page.goto(f"{BASE_URL}/?action=clear_expenses")
+    expect(page.locator("tbody tr")).to_have_count(1)
+
+
 def test_budget_warning_banner(page):
     expect(page.locator(".banner")).to_have_count(0)
 
